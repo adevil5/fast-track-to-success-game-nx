@@ -1,14 +1,14 @@
 import { Component } from '@angular/core';
-import { RouterModule } from '@angular/router';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { CommonModule } from '@angular/common';
+import { GameComponent } from './components/game/game.component';
 
 @Component({
-  standalone: true,
-  imports: [NxWelcomeComponent, RouterModule],
   selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.css',
+  standalone: true,
+  imports: [CommonModule, GameComponent],
+  template: `
+    <h1>Fast-Track to Success</h1>
+    <app-game></app-game>
+  `,
 })
-export class AppComponent {
-  title = 'fast-track-to-success-game-nx';
-}
+export class AppComponent {}
