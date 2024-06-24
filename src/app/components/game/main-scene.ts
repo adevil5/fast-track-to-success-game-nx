@@ -8,68 +8,112 @@ export class MainScene extends Scene {
   private obstacles!: Phaser.Physics.Arcade.Group;
   private powerUps!: Phaser.Physics.Arcade.Group;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-  private sceneGameState: GameState;
+  private sceneGameState!: GameState;
   private healthText!: Phaser.GameObjects.Text;
   private scoreText!: Phaser.GameObjects.Text;
+  private gameService!: GameService;
 
-  constructor(private gameService: GameService) {
+  constructor() {
     super({ key: 'MainScene' });
+  }
+
+  setGameService(gameService: GameService) {
     this.gameService = gameService;
-    this.sceneGameState = { score: 0, level: 1, health: 100 };
+    this.sceneGameState = {
+      score: this.gameService.score(),
+      level: this.gameService.level(),
+      health: this.gameService.health(),
+    };
   }
 
   preload() {
+    // Set base path for assets
+    this.load.setBaseURL('assets/');
+
     // Character
-    this.load.image('character', 'assets/images/character.webp');
+    this.load.spritesheet('character', 'images/robot-sprite.png', {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
 
     // Obstacles
-    this.load.image('debt-sign', 'assets/images/obstacles/debt-sign.webp');
-    this.load.image(
-      'burnout-icon',
-      'assets/images/obstacles/burnout-icon.webp'
-    );
+    this.load.image('debt-sign', 'images/obstacles/debt-sign.png');
+    this.load.image('burnout-icon', 'images/obstacles/burnout-icon.png');
     this.load.image(
       'missed-opportunity',
-      'assets/images/obstacles/missed-opportunity.webp'
+      'images/obstacles/missed-opportunity.png'
     );
 
     // Power-ups
     this.load.image(
       'tuition-assistance',
-      'assets/images/power-ups/tuition-assistance.webp'
+      'images/power-ups/tuition-assistance.png'
     );
-    this.load.image(
-      'career-advice',
-      'assets/images/power-ups/career-advice.webp'
-    );
-    this.load.image(
-      'certification',
-      'assets/images/power-ups/certification.webp'
-    );
-    this.load.image('networking', 'assets/images/power-ups/networking.webp');
-    this.load.image(
-      'advanced-degree',
-      'assets/images/power-ups/advanced-degree.webp'
-    );
-    this.load.image('mentorship', 'assets/images/power-ups/mentorship.webp');
+    this.load.image('career-advice', 'images/power-ups/career-advice.png');
+    this.load.image('certification', 'images/power-ups/certification.png');
+    this.load.image('networking', 'images/power-ups/networking.png');
+    this.load.image('advanced-degree', 'images/power-ups/advanced-degree.png');
+    this.load.image('mentorship', 'images/power-ups/mentorship.png');
 
     // Backgrounds
-    this.load.image('cityscape', 'assets/images/backgrounds/cityscape.webp');
-    this.load.image('office', 'assets/images/backgrounds/office.webp');
+    this.load.image('cityscape', 'images/backgrounds/cityscape.png');
+    this.load.image('office', 'images/backgrounds/office.png');
 
     // Audio
-    this.load.audio('background-music', 'assets/audio/background-music.mp3');
-    this.load.audio('collect-power-up', 'assets/audio/collect-power-up.mp3');
-    this.load.audio('hit-obstacle', 'assets/audio/hit-obstacle.mp3');
-    this.load.audio('level-complete', 'assets/audio/level-complete.mp3');
-    this.load.audio('game-over', 'assets/audio/game-over.mp3');
+    this.load.audio('background-music', 'audio/background-music.mp3');
+    this.load.audio('collect-power-up', 'audio/collect-power-up.mp3');
+    this.load.audio('hit-obstacle', 'audio/hit-obstacle.mp3');
+    this.load.audio('level-complete', 'audio/level-complete.mp3');
+    this.load.audio('game-over', 'audio/game-over.mp3');
 
     // UI Elements
-    this.load.image('pause-button', 'assets/images/ui/pause-button.webp');
+    this.load.image('pause-button', 'images/ui/pause-button.png');
   }
 
   create() {
+    // Create animations from the sprite sheet
+    this.anims.create({
+      key: 'walk-down',
+      frames: this.anims.generateFrameNumbers('character', {
+        start: 0,
+        end: 3,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+
+    this.anims.create({
+      key: 'walk-left',
+      frames: this.anims.generateFrameNumbers('character', {
+        start: 4,
+        end: 7,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+
+    this.anims.create({
+      key: 'walk-right',
+      frames: this.anims.generateFrameNumbers('character', {
+        start: 8,
+        end: 11,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+
+    this.anims.create({
+      key: 'walk-up',
+      frames: this.anims.generateFrameNumbers('character', {
+        start: 12,
+        end: 15,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+
     this.player = this.physics.add.sprite(400, 300, 'character');
+    this.player.setScale(0.5);
     this.player.setCollideWorldBounds(true);
 
     this.obstacles = this.physics.add.group();
@@ -117,20 +161,22 @@ export class MainScene extends Scene {
   }
 
   override update() {
+    // Handle player movement and animation
     if (this.cursors.left.isDown) {
       this.player.setVelocityX(-160);
+      this.player.anims.play('walk-left', true);
     } else if (this.cursors.right.isDown) {
       this.player.setVelocityX(160);
-    } else {
-      this.player.setVelocityX(0);
-    }
-
-    if (this.cursors.up.isDown) {
+      this.player.anims.play('walk-right', true);
+    } else if (this.cursors.up.isDown) {
       this.player.setVelocityY(-160);
+      this.player.anims.play('walk-up', true);
     } else if (this.cursors.down.isDown) {
       this.player.setVelocityY(160);
+      this.player.anims.play('walk-down', true);
     } else {
-      this.player.setVelocityY(0);
+      this.player.setVelocity(0);
+      this.player.anims.stop();
     }
 
     this.healthText.setText(`Health: ${this.sceneGameState.health}`);
@@ -144,6 +190,7 @@ export class MainScene extends Scene {
     const obstacleType = Phaser.Utils.Array.GetRandom(obstacleTypes);
 
     const obstacle = this.obstacles.create(x, y, obstacleType);
+    obstacle.setScale(0.25);
     obstacle.setCollideWorldBounds(true);
     obstacle.setBounce(1);
     obstacle.setVelocity(
@@ -172,6 +219,7 @@ export class MainScene extends Scene {
     const powerUpType = Phaser.Utils.Array.GetRandom(powerUpTypes);
 
     const powerUp = this.powerUps.create(x, y, powerUpType);
+    powerUp.setScale(0.25);
     powerUp.setCollideWorldBounds(true);
 
     this.time.delayedCall(10000, () => {

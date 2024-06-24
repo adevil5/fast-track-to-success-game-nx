@@ -38,7 +38,14 @@ export class GameComponent implements OnInit, OnDestroy {
       width: 800,
       height: 600,
       parent: this.gameContainer.nativeElement,
-      scene: [MainScene],
+      scene: {
+        init: () => {
+          // Pass the GameService to the scene
+          (this.game.scene.getScene('MainScene') as MainScene).setGameService(
+            this.gameService
+          );
+        },
+      },
       physics: {
         default: 'arcade',
         arcade: {
@@ -52,6 +59,7 @@ export class GameComponent implements OnInit, OnDestroy {
     };
 
     this.game = new Phaser.Game(config);
+    this.game.scene.add('MainScene', MainScene, true);
   }
 
   ngOnDestroy() {
