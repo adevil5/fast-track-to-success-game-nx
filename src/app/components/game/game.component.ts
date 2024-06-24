@@ -22,6 +22,7 @@ import { MainScene } from './main-scene';
       <p>Score: {{ gameService.score() }}</p>
       <p>Level: {{ gameService.level() }}</p>
       <p>Health: {{ gameService.health() }}</p>
+      <p *ngIf="gameService.isGameOver()">Game Over!</p>
     </div>
   `,
 })
@@ -36,7 +37,7 @@ export class GameComponent implements OnInit, OnDestroy {
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.AUTO,
       width: 800,
-      height: 600,
+      height: 376,
       parent: this.gameContainer.nativeElement,
       scene: {
         init: () => {
@@ -49,7 +50,7 @@ export class GameComponent implements OnInit, OnDestroy {
       physics: {
         default: 'arcade',
         arcade: {
-          gravity: { x: 0, y: 0 },
+          gravity: { x: 0, y: 300 },
           debug: false,
         },
       },
